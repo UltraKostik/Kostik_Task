@@ -47,31 +47,17 @@ public class Task {
 
     public void viewTask(Scanner scanner) {
         try {
-            File[] files = new File("notes").listFiles((dir,name) -> name.endsWith(".json"));
+            File[] files = getNotesList();
+            if (files == null) return;
 
-            if (files == null || files.length == 0) {
-                System.out.println("Нет заметок");
-                return;
-            }
-
-            for (int i = 0; i < files.length; i++)
-                System.out.println((i + 1) + ". " + files[i].getName());
-
-            System.out.print("Номер (0-выход): ");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
-
+            int choice = getUserChoice(scanner, files.length);
             if (choice == 0) return;
-            if (choice < 1 || choice > files.length) {
-                System.out.println("Неверный номер");
-                return;
-            }
 
             String content = new String(java.nio.file.Files.readAllBytes(files[choice - 1].toPath()));
             JSONObject json = new JSONObject(content);
 
             System.out.println("Название файла: " + json.getString("fileName"));
-            System.out.println("Контент файла:\n" +json.getString("content"));
+            System.out.println("Контент файла:\n" + json.getString("content"));
 
         } catch (Exception e) {
             System.out.println("Ошибка: " + e.getMessage());
@@ -80,22 +66,83 @@ public class Task {
 
     public void deleteTask(Scanner scanner) {
         try {
-            System.out.println("Введите название заметки:");
-            String name_file = scanner.nextLine();
-            File file = new File("notes", name_file + ".json");
+            File[] files = getNotesList();
+            if (files == null) return;
 
-            if (file.exists()) {
-                if (file.delete()) {
-                    System.out.println("Файл " + name_file + ".json успешно удален.");
-                } else {
-                    System.out.println("Файл " + name_file + ".json не был удален.");
-                }
+            int choice = getUserChoice(scanner, files.length);
+            if (choice == 0) return;
+
+            File file = files[choice - 1];
+            String name_file = file.getName();
+
+            if (file.delete()) {
+                System.out.println("Файл " + name_file + " успешно удален.");
             } else {
-                System.out.println("Файл " + name_file + ".json не найден в папке notes.");
+                System.out.println("Файл " + name_file + " не был удален.");
             }
 
         } catch (Exception e) {
             System.out.println("Ошибка при удалении заметки: " + e.getMessage());
         }
+    }
+
+    public void editTask(Scanner scanner) {
+        try {
+            File[] files = getNotesList();
+            if (files == null) return;
+
+            int choice = getUserChoice(scanner, files.length);
+            if (choice == 0) return;
+
+            File file = files[choice - 1];
+            String content = new String(java.nio.file.Files.readAllBytes(file.toPath()));
+            JSONObject json = new JSONObject(content);
+
+            System.out.println("Текущий текст: " + json.getString("content"));
+            System.out.println("Введите новый текст:");
+            String newText = scanner.nextLine();
+
+            if (!newText.isEmpty()) {
+                json.put("content", newText);
+                try (FileWriter fw = new FileWriter(file)) {
+                    fw.write(json.toString());
+                    System.out.println("Заметка отредактирована!");
+                }
+            } else {
+                System.out.println("Редактирование отменено");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Ошибка: " + e.getMessage());
+        }
+    }
+
+    ///Вспомогательный метод (Я попытался в час ночи поэкперментировать над кодом и максимально его сжать)///
+
+    private File[] getNotesList() {
+        File[] files = new File("notes").listFiles((dir, name) -> name.endsWith(".json"));
+
+        if (files == null || files.length == 0) {
+            System.out.println("Нет заметок");
+            return null;
+        }
+
+        System.out.println("Список заметок:");
+        for (int i = 0; i < files.length; i++)
+            System.out.println((i + 1) + ". " + files[i].getName());
+        return files;
+    }
+
+    private int getUserChoice(Scanner scanner, int max) {
+        System.out.print("Номер (0-выход): ");
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+
+        if (choice == 0) return 0;
+        if (choice < 1 || choice > max) {
+            System.out.println("Неверный номер");
+            return 0;
+        }
+        return choice;
     }
 }

@@ -7,7 +7,7 @@ public class Main {
         Task myTask = new Task();
 
         while (true){
-            System.out.print("1. Показать задачи\n2. Добавить задачу\n3. Удалить задачу\n4. Выход: ");
+            System.out.print("1. Показать задачи\n2. Добавить задачу\n3. Удалить задачу\n4. Редактировать задачу\n5. Выход: ");
             int choice = scanner.nextInt();
             scanner.nextLine();
             switch (choice) {
@@ -24,6 +24,10 @@ public class Main {
                     myTask.deleteTask(scanner);
                     break;
                 case 4:
+                    System.out.println("Редактирование...");
+                    myTask.editTask(scanner);
+                    break;
+                case 5:
                     System.out.println("Пока-пока!");
                     scanner.close();
                     return;
